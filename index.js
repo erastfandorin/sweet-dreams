@@ -1,8 +1,11 @@
 import { config } from 'dotenv';
 import { initializeApp } from 'firebase/app';
-import { getDatabase } from 'firebase/database';
 // import { getAnalytics } from "firebase/analytics";
-import { ref, set, onValue } from 'firebase/database';
+import { ref, set, onValue, getDatabase, child, get } from 'firebase/database';
+import express from 'express';
+import { Telegraf, Markup, session } from 'telegraf';
+
+config();
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -14,23 +17,16 @@ const firebaseConfig = {
   appId: process.env.FIREBASE_APP_ID,
   measurementId: process.env.FIREBASE_MEASUREMENT_ID,
 };
-
-// const app = initializeApp(firebaseConfig);
+const db = getDatabase(initializeApp(firebaseConfig));
 // const analytics = getAnalytics(app);
-// export const db = getDatabase(app);
-
-config();
-
-import express from 'express';
-import { Telegraf, Markup, session } from 'telegraf';
 
 // Markup.keyboard([["Розповісти сон анонімно", "Розповісти сон відкрито"]]).resize();
 
-function yesNoKeyboard() {
+function sendEditKeyboard(dreamText) {
   return Markup.inlineKeyboard([
     [
-      Markup.button.callback('Так, публікуйте! 🥳', 'yes'),
-      Markup.button.callback('Редагувати ✍️', 'no'),
+      Markup.button.callback('Так, публікуйте! 🥳', 'sendDream'),
+      Markup.button.switchToCurrentChat('Редагувати ✍️', `${dreamText}`),
     ],
   ]);
 }
@@ -42,7 +38,9 @@ const PORT = 3000;
 bot.use(session());
 
 bot.start(ctx => {
-  ctx.session = { isStartActive: true };
+  ctx.session = {};
+
+  ctx.session.isStartActive = true;
   ctx.replyWithHTML(
     `Привіт, ${ctx.update.message.from.first_name}! Мене звати Вечірній Повістяр ✨\n\n` +
       'Я допоможу тобі поділитися своїм сном. Натомість, ти побачиш сон іншого учасника!\n\n' +
@@ -52,27 +50,36 @@ bot.start(ctx => {
 
 bot.on('text', ctx => {
   if (ctx.session?.isStartActive) {
+    const messageText = ctx.message.text.replace(/@sweet_dreams_tgbot /g, ''); ///// @sweet_dreams_tgbot - telegram bot name
+    ctx.session.messageText = messageText;
+
     ctx.replyWithHTML(
       'Ти хочеш анонімно поділитися наступним сном:\n\n' +
-        `<i>“${ctx.message.text}”</i>\n\n` +
+        `<i>“${messageText}”</i>\n\n` +
         'Чи все вірно?',
-      yesNoKeyboard(),
+      sendEditKeyboard(messageText),
     );
   } else {
     ctx.reply('Нажміть /start щоб почати');
   }
 });
 
-bot.action(['yes', 'no'], ctx => {
-  if (ctx.callbackQuery.data === 'yes') {
-    ctx.editMessageText(
-      'Дякую, ти супер! 😇' +
-        'Тримай сон від нашого анонімного користувача\ користувача під ніком “клікабельний_нік” :' +
-        '“Я продавав Юпітер своєму таргану, а він подарував мені бузок, який став матеріалом для лодки. Так й створився весь світ, ну а я просто кунжут!”',
-    );
-  } else {
-    // ctx.deleteMessage();
-  }
+bot.action('sendDream', async ctx => {
+  const user = await getUser();
+  const randomDream = await getDream(user.userId);
+
+  // console.log('2', ctx.update.callback_query.from.id); //username
+  // console.log('3', ctx.update);
+  // console.log('4', ctx);
+
+  await setDream(user, ctx.session?.messageText)
+
+  ctx.editMessageText(
+    'Дякую, ти супер! 😇\n\n' +
+      'Тримай сон від нашого анонімного користувача:\n\n' +
+      `<i>“${randomDream.text}”</i>`,
+    { parse_mode: 'HTML' },
+  );
 });
 
 // bot.hears(/^удалить\s(\d+)$/, (ctx) => {
@@ -86,33 +93,64 @@ bot.action(['yes', 'no'], ctx => {
 //   );
 // });
 
+// handle all telegram updates with HTTPs trigger
+// exports.echoBot = functions.https.onRequest(async (request, response) => {
+// 	functions.logger.log('Incoming message', request.body)
+// 	return await bot.handleUpdate(request.body, response).then((rv) => {
+// 		// if it's not a request from the telegram, rv will be undefined, but we should respond with 200
+// 		return !rv && response.sendStatus(200)
+// 	})
+// })
+
 bot.launch();
 app.listen(PORT, () => console.log(`My server is running on port ${PORT}`));
 
-//   const getDreams = async (setAllDreams) => {
-//     const starCountRef = ref(db, "dreams/");
-//     onValue(starCountRef, (snapshot) => {
-//       const data = snapshot.val();
-//       setAllDreams(data);
-//     });
-//   };
+async function getUser(userId) {
+  if (userId) {
+    return await get(child(ref(db), 'users/' + userId));
+  } else {
+    const user_bot_data = await get(child(ref(db), `users/`));
+    const allUsers = Object.values(user_bot_data.val());
 
-//   const getUniqueId = (allDreams) => {
-//     let dreamsIDs = [];
-//     for (let dream in allDreams) {
-//       dreamsIDs.push(dream);
-//     }
-//     return createUniqueID(dreamsIDs);
-//   };
+    const userIDs = Object.keys(allUsers);
+    const randomUserCount = Math.floor(Math.random() * userIDs.length);
 
-//   const submitForm = (dream) => {
-//     const newID = getUniqueId(allDreams);
-//     setNewDream(newID, dream);
-//   };
+    return allUsers[randomUserCount];
+  }
+}
+
+async function getDream(userId, dreamId) {
+  if (dreamId) {
+    return await get(
+      child(ref(db), 'users/' + userId + '/userDreams/' + dreamId),
+    );
+  } else {
+    const user_bot_data = getUserDreams(userId);
+    const allUserDreams = Object.values(user_bot_data.val());
+
+    const userDreamIDs = Object.keys(allUserDreams);
+    const randomDreamCount = Math.floor(Math.random() * userDreamIDs.length);
+    return allUserDreams[randomDreamCount];
+  }
+}
+
+async function getUserDreams(userId) {
+  return await get(child(ref(db), 'users/' + userId + '/userDreams/'));
+}
+
+async function setDream(user, dream) {
+  console.log(user);
+  // console.log('2', ctx.update.callback_query.from.id); //username
+  await set(child(ref(db), 'users/' + user.userId), {
+    userId: user.userId,
+    username: user.username || "anon", /// [inline mention of a user](tg://user?id=<user_id>)
+    userDreams: dream,
+  });
+}
 
 //   /// api request
 //   const setNewDream = (userId, dream) => {
-//     set(ref(db, "dreams/" + userId), {
+//     set(ref(db, "users/" + userId), {
 //       userId: userId,
 //       text: dream,
 //     });

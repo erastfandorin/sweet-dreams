@@ -2,7 +2,7 @@ import { config } from 'dotenv';
 import express from 'express';
 import { Telegraf, Markup, session } from 'telegraf';
 
-import { getUser, getDream, getUserDreams, setDream } from "./api.js";
+import { getUser, getDream, getUserDreams, setDream } from './api.js';
 
 config();
 
@@ -15,26 +15,32 @@ function sendEditKeyboard(dreamText) {
   ]);
 }
 
-function createDreamList(ctx) {
-  const dreams = ctx.session?.allUserDreams;
-  const step = 3;
+function createDreamsList(ctx) {
+  const dreams = ctx.session.allUserDreams;
+  const step = ctx.session.step;
+  const dreamPage = ctx.session.currentDreamPage;
+
   const currentDream = [];
 
-  dreams.forEach(dream => {
-    if (currentDream.length < step) {
+  const currentDreamMax = dreamPage * step;
+  const currentDreamMin = currentDreamMax - step;
+
+  dreams.forEach((dream, index) => {
+    if (
+      currentDream.length < step &&
+      index >= currentDreamMin &&
+      index <= currentDreamMax
+    ) {
       currentDream.push([
         Markup.button.callback(`${dream.text}`, `dreamId${dream.dreamId}`),
       ]);
     }
   });
 
-  const allPageCount = dreams.length / step;
+  const allPageCount = Math.ceil(dreams.length / step);
   const navigationKeyboard = [
     Markup.button.callback(`⬅️`, `dreamListMinus`),
-    Markup.button.callback(
-      `${ctx.session?.currentDreamPage}/${allPageCount}`,
-      `plug`,
-    ),
+    Markup.button.callback(`${dreamPage}/${allPageCount}`, `plug`),
     Markup.button.callback(`➡️`, `dreamListPlus`),
   ];
 
@@ -53,12 +59,13 @@ bot.use(session());
 bot.command('alldream', async ctx => {
   ctx.session = {};
   ctx.session.currentDreamPage = 1;
+  ctx.session.step = 6;
 
   const userId = ctx.update.message.from.id;
   const allDreams = await getUserDreams(userId);
   ctx.session.allUserDreams = allDreams;
 
-  ctx.reply('Вибери сон:', createDreamList(ctx));
+  ctx.reply('Щоденник твоїх снів:', createDreamsList(ctx));
 });
 
 // get current dream
@@ -74,17 +81,30 @@ bot.action(/dreamId.*/, ctx => {
 bot.action(['dreamListMinus', 'dreamListPlus'], ctx => {
   const action = ctx.update.callback_query.data;
 
+  const dreamPage = ctx.session.currentDreamPage;
   switch (action) {
     case 'dreamListMinus':
+      if (dreamPage > 1) {
+        ctx.session.currentDreamPage = ctx.session.currentDreamPage - 1;
+        ctx.editMessageText('Щоденник твоїх снів:', createDreamsList(ctx));
+      }
       break;
+
     case 'dreamListPlus':
+      const dreams = ctx.session.allUserDreams;
+      const step = ctx.session.step;
+      const allPageCount = Math.ceil(dreams.length / step);
+
+      if (dreamPage < allPageCount) {
+        ctx.session.currentDreamPage = ctx.session.currentDreamPage + 1;
+        ctx.editMessageText('Щоденник твоїх снів:', createDreamsList(ctx));
+      }
       break;
+
     default:
       console.error('Error');
       break;
   }
-  console.log( ctx.session.allUserDreams);
-
 });
 
 bot.start(ctx => {

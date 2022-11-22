@@ -112,8 +112,9 @@ bot.start(ctx => {
 
   ctx.session.isStartActive = true;
   ctx.reply(
-    `Привіт, ${ctx.update.message.from.first_name}! Мене звати Вечірній Повістяр ✨\n\n` +
+    `Привіт, ${ctx.update.message.from.first_name}! Мене звати Сновидець ✨\n\n` +
       'Я допоможу тобі поділитися своїм сном. Натомість, ти побачиш сон іншого учасника!\n\n' +
+      'Наше з тобою спілкування повністю анонімне, ми не розголошуємо авторів сновидінь!\n\n' +
       'Напиши свій сон у полі для введеня тексту ⬇️',
   );
 });
@@ -186,7 +187,6 @@ bot.on('text', ctx => {
     }
 
     function checkRepeatedInMessage(type, brakeCount, message) {
-
       let stringElement;
       if (type === 'world') {
         stringElement = message.split(' ');
@@ -227,16 +227,22 @@ bot.on('text', ctx => {
 });
 
 bot.action('sendDream', async ctx => {
-  const user = await getUser();
+  const currentUserId = ctx.update.callback_query.from.id;
+  let user;
+  do {
+    user = await getUser();
+  } while (currentUserId === user.userId);
+
   const randomDream = await getDream(user.userId);
 
-  // console.log('2', ctx.update.callback_query.from.id); //username
   await setDream(ctx);
 
   ctx.editMessageText(
     'Дякую, ти супер! 😇\n\n' +
       'Тримай сон від нашого анонімного користувача:\n\n' +
-      `<i>“${randomDream.text}”</i>`,
+      `<i>“${randomDream.text}”</i>\n\n`+
+      'Якщо хочеш поділитист ще одним сном, відправ мені його нижче ⬇️',
+
     { parse_mode: 'HTML' },
   );
 });

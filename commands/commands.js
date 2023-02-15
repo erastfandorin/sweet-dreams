@@ -1,4 +1,4 @@
-import { getUser, getDream, setDream } from '../api.js';
+import { getUser, getDream, setDream, getUserDreams } from '../api.js';
 
 import getAllDreams from './getAllDreams.js';
 import checkDreamText from './checkDreamText.js';
@@ -6,11 +6,9 @@ import checkDreamText from './checkDreamText.js';
 export default {
   start: ctx => start(ctx),
   getAllDreams: async ctx => getAllDreams(ctx),
-
-  getCurrentDream: ctx => getCurrentDream(ctx),
+  getCurrentDream: async ctx => getCurrentDream(ctx),
   changeDreamPage: ctx => changeDreamPage(ctx),
   checkDreamText: ctx => checkDreamText(ctx),
-
   sendDream: async ctx => sendDream(ctx),
 };
 
@@ -26,8 +24,15 @@ function start(ctx) {
   );
 }
 
-function getCurrentDream(ctx) {
+async function getCurrentDream(ctx) {
   const dreamId = ctx.update.callback_query.data.match(/[0-9]+/)[0];
+
+  if (!ctx.session.allUserDreams) {
+    const userId = ctx.update.callback_query.from.id;
+    const allDreams = await getUserDreams(userId);
+    ctx.session.allUserDreams = allDreams;
+  }
+
   const currentDream = ctx.session.allUserDreams.find(dream => dream.dreamId === Number(dreamId));
   ctx.reply(currentDream);
 }

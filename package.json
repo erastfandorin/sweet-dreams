@@ -22,12 +22,14 @@
   "homepage": "https://github.com/erastfandorin/sweet-dreams-telegram-bot#readme",
   "devDependencies": {
     "ngrok": "^4.3.3",
-    "nodemon": "^2.0.20"
+    "nodemon": "^2.0.20",
+    "pino-pretty": "^9.3.0"
   },
   "dependencies": {
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "firebase": "^9.13.0",
+    "pino": "^8.10.0",
     "telegraf": "^4.10.0",
     "telegraf-session-local": "^2.1.1",
     "telegraf-update-logger": "^1.5.0"

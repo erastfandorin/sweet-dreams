@@ -1,8 +1,7 @@
 import { config } from 'dotenv';
 import { initializeApp } from 'firebase/app';
-import { ref, set, onValue, getDatabase, child, get } from 'firebase/database';
+import { ref, set, getDatabase, child, get } from 'firebase/database';
 // import { getAnalytics } from "firebase/analytics";
-
 config();
 
 const firebaseConfig = {
@@ -61,13 +60,11 @@ async function setDream(ctx) {
   const dreamId = ctx.update.callback_query.message.message_id;
   const dream = ctx.session?.messageText;
   const userId = ctx.update.callback_query.from.id;
-  const userName = ctx.update.callback_query.from.username;
 
   const user = await getUser(userId);
   if (!user) {
     await set(child(ref(db), 'users/' + userId), {
       userId: userId,
-      username: userName || 'anon', /// [inline mention of a user](tg://user?id=<user_id>)
       userDreams: { [dreamId]: { dreamId: dreamId, text: dream } },
     });
   } else {

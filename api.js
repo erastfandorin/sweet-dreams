@@ -1,8 +1,6 @@
-import { config } from 'dotenv';
 import { initializeApp } from 'firebase/app';
 import { ref, set, getDatabase, child, get } from 'firebase/database';
 // import { getAnalytics } from "firebase/analytics";
-config();
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,

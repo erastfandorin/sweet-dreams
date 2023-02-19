@@ -1,5 +1,5 @@
+import * as config from '../config.js';
 import updateLogger from 'telegraf-update-logger';
-const isDevelopment = process.env.NODE_ENV === "development";
 
 export const debugLoggerMiddleware = options => (ctx, next) => {
 
@@ -14,7 +14,7 @@ export const debugLoggerMiddleware = options => (ctx, next) => {
       ctx.logger.debug({
         msg,
       }),
-    colors: isDevelopment,
+    colors: config.isDevelopment,
     ...options,
   })(ctx, next);
 };

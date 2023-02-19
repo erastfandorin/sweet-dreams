@@ -1,6 +1,6 @@
+import * as config from '../config.js';
 import Logger from 'pino';
 import { randomUUID } from 'crypto';
-
 // import path from 'path';
 // import { fileURLToPath } from 'url';
 // const __filename = fileURLToPath(import.meta.url);
@@ -10,8 +10,7 @@ const loggerOptions = {
   level: process.env.PINO_LOG_LEVEL
 };
 
-const isDevelopment = process.env.NODE_ENV === 'development';
-if (isDevelopment) {
+if (config.isDevelopment) {
   loggerOptions.base = {};
   loggerOptions.transport = {
     target: 'pino-pretty',
@@ -28,7 +27,7 @@ const logger = Logger(
 
 export const setupLoggerMiddleware = () => (ctx, next) => {
   ctx.logger = logger.child({
-    // requestId: randomUUID(),
+    requestId: randomUUID(),
   });
   next();
 };

@@ -1,5 +1,6 @@
 import * as config from './config.js';
 import express from 'express';
+import path from 'path';
 import { Telegraf } from 'telegraf';
 import LocalSession from 'telegraf-session-local';
 import commands from './commands/commands.js';

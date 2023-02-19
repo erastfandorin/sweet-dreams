@@ -7,7 +7,7 @@ import { setupLoggerMiddleware } from './middlewares/setup-logger.middleware.js'
 import { debugLoggerMiddleware } from './middlewares/debug-logger.middleware.js';
 
 const app = express();
-const bot = new Telegraf(process.env.TELEGRAM_API_TOKEN);
+export const bot = new Telegraf(process.env.TELEGRAM_API_TOKEN);
 
 bot.use(new LocalSession({ database: 'db.json' }).middleware());
 bot.use(setupLoggerMiddleware());

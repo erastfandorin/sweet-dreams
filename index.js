@@ -1,6 +1,5 @@
 import * as config from './config.js';
 import express from 'express';
-import path from 'path';
 import { Telegraf } from 'telegraf';
 import LocalSession from 'telegraf-session-local';
 import commands from './commands/commands.js';
@@ -10,7 +9,7 @@ import { debugLoggerMiddleware } from './middlewares/debug-logger.middleware.js'
 const app = express();
 export const bot = new Telegraf(process.env.TELEGRAM_API_TOKEN);
 
-bot.use(new LocalSession({ database: path.join(process.cwd(), '/tmp/db.json') }).middleware());
+bot.use(new LocalSession({ database: '/tmp/db.json' }).middleware());
 bot.use(setupLoggerMiddleware());
 bot.use(debugLoggerMiddleware());
 

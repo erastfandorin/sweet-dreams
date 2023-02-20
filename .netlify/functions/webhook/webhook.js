@@ -3,9 +3,9 @@ import { bot } from '../../../index.js';
 
 export const handler = async event => {
   try {
+    console.log(event.body);
     const subject = event.queryStringParameters.name || 'World';
     await bot.handleUpdate(JSON.parse(event.body));
-    console.log('');
     return {
       statusCode: 200,
       body: JSON.stringify({ message: `Hello ${subject}` }),

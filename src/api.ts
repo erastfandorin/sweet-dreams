@@ -1,3 +1,6 @@
+import { Context } from 'telegraf';
+import { DreamBotContext } from './types/types.js';
+import { Message, Update, CallbackQuery } from 'telegraf/types';
 import { initializeApp } from 'firebase/app';
 import { ref, set, getDatabase, child, get } from 'firebase/database';
 // import { getAnalytics } from "firebase/analytics";
@@ -15,7 +18,7 @@ const firebaseConfig = {
 const db = getDatabase(initializeApp(firebaseConfig));
 // const analytics = getAnalytics(app);
 
-async function getUser(userId) {
+async function getUser(userId?: number) {
   if (userId) {
     const user_bot_data = await get(child(ref(db), 'users/' + userId));
     return user_bot_data.val();
@@ -30,11 +33,9 @@ async function getUser(userId) {
   }
 }
 
-async function getDream(userId, dreamId) {
+async function getDream(userId?: number, dreamId?: number) {
   if (dreamId) {
-    const user_bot_data = await get(
-      child(ref(db), 'users/' + userId + '/userDreams/' + dreamId),
-    );
+    const user_bot_data = await get(child(ref(db), 'users/' + userId + '/userDreams/' + dreamId));
     return user_bot_data.val();
   } else {
     const allUserDreams = await getUserDreams(userId);
@@ -45,19 +46,15 @@ async function getDream(userId, dreamId) {
   }
 }
 
-async function getUserDreams(userId) {
-  try {
-    const data = await get(child(ref(db), 'users/' + userId + '/userDreams/'));
-    return Object.values(data.val());
-  } catch (err) {
-    console.error(err);
-  }
+async function getUserDreams(userId?: number) {
+  const data = await get(child(ref(db), 'users/' + userId + '/userDreams/'));
+  return Object.values(data.val());
 }
 
-async function setDream(ctx) {
-  const dreamId = ctx.update.callback_query.message.message_id;
-  const dream = ctx.session?.messageText;
-  const userId = ctx.update.callback_query.from.id;
+async function setDream(ctx: DreamBotContext<Update.CallbackQueryUpdate>) {
+  const dreamId = String(ctx.callbackQuery?.message?.message_id);
+  const dream = ctx.session?.userDream;
+  const userId = ctx.callbackQuery.from.id;
 
   const user = await getUser(userId);
   if (!user) {

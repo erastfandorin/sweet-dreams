@@ -1,9 +1,16 @@
 import { Markup } from 'telegraf';
+import { Update } from 'typegram';
+import { DreamBotContext } from '../types/types';
+import { message } from 'telegraf/filters';
 
-export default function checkDreamText(ctx) {
-  if (ctx.session?.isStartActive) {
-    const messageText = ctx.message.text.replace(/@sweet_dreams_tgbot /g, ''); ///// @sweet_dreams_tgbot - telegram bot name
-    ctx.session.messageText = messageText;
+export default function checkDreamText(ctx: DreamBotContext) {
+  if (ctx.session?.isUserStartedBot) {
+
+    let messageText = '';
+    if(ctx.has(message("text"))) {
+      messageText = ctx.message.text!.replace(new RegExp(`@${ctx.botInfo.username}`, 'g'), '');
+    }
+    ctx.session.userDream = messageText;
 
     // check on urls
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -54,7 +61,7 @@ export default function checkDreamText(ctx) {
   }
 }
 
-function checkRepeatedInMessage(type, brakeCount, message) {
+function checkRepeatedInMessage(type: string, brakeCount: number, message: string) {
   let stringElement;
   if (type === 'world') {
     stringElement = message.split(' ');
@@ -66,24 +73,27 @@ function checkRepeatedInMessage(type, brakeCount, message) {
   let previousWorld;
   let currentWorld;
 
-  for (let i = 0; i < stringElement.length; i++) {
-    currentWorld = stringElement[i];
+  if (stringElement) {
+    for (let i = 0; i < stringElement.length; i++) {
+      currentWorld = stringElement[i];
 
-    if (previousWorld === currentWorld) {
-      counter = counter + 1;
-    } else {
-      counter = 1;
-    }
+      if (previousWorld === currentWorld) {
+        counter = counter + 1;
+      } else {
+        counter = 1;
+      }
 
-    if (counter === brakeCount) {
-      return true;
+      if (counter === brakeCount) {
+        return true;
+      }
+      previousWorld = currentWorld;
     }
-    previousWorld = currentWorld;
+    return false;
   }
   return false;
 }
 
-function sendEditKeyboard(dreamText) {
+function sendEditKeyboard(dreamText: any) {
   return Markup.inlineKeyboard([
     [
       Markup.button.callback('Так, публікуйте! 🥳', 'sendDream'),

@@ -10,6 +10,7 @@ const checkDreamText_js_1 = __importDefault(require("./checkDreamText.js"));
 exports.checkDreamText = checkDreamText_js_1.default;
 function start(ctx) {
     ctx.session.isUserStartedBot = true;
+    console.log("llll");
     ctx.reply(`Привіт, ${ctx.update.message.from.first_name}! Мене звати Сновидець ✨\n\n` +
         'Я допоможу тобі поділитися своїм сном. Натомість, ти побачиш сон іншого учасника!\n\n' +
         'Наше з тобою спілкування повністю анонімне, ми не розголошуємо авторів сновидінь!\n\n' +

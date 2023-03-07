@@ -1,9 +1,7 @@
-import { Context } from 'telegraf';
 import { DreamBotContext } from './types/types.js';
-import { Message, Update, CallbackQuery } from 'telegraf/types';
+import { Update } from 'telegraf/types';
 import { initializeApp } from 'firebase/app';
 import { ref, set, getDatabase, child, get } from 'firebase/database';
-// import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -16,7 +14,6 @@ const firebaseConfig = {
   measurementId: process.env.FIREBASE_MEASUREMENT_ID,
 };
 const db = getDatabase(initializeApp(firebaseConfig));
-// const analytics = getAnalytics(app);
 
 async function getUser(userId?: number) {
   if (userId) {

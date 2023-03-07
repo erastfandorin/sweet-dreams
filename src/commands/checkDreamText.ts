@@ -1,5 +1,4 @@
 import { Markup } from 'telegraf';
-import { Update } from 'typegram';
 import { DreamBotContext } from '../types/types';
 import { message } from 'telegraf/filters';
 

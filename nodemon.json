@@ -1,7 +1,10 @@
 {
   "ignore": [
+    "node_modules/",
+    "src/",
     ".git",
-    "node_modules",
     "db.json"
-  ]
+  ],
+	"watch": ["build/"],
+	"ext": "ts,js,json"
 }

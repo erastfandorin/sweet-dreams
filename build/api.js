@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.setDream = exports.getUserDreams = exports.getDream = exports.getUser = void 0;
 const app_1 = require("firebase/app");
 const database_1 = require("firebase/database");
-// import { getAnalytics } from "firebase/analytics";
 const firebaseConfig = {
     apiKey: process.env.FIREBASE_API_KEY,
     authDomain: process.env.FIREBASE_AUTH_DOMAIN,
@@ -15,7 +14,6 @@ const firebaseConfig = {
     measurementId: process.env.FIREBASE_MEASUREMENT_ID,
 };
 const db = (0, database_1.getDatabase)((0, app_1.initializeApp)(firebaseConfig));
-// const analytics = getAnalytics(app);
 async function getUser(userId) {
     if (userId) {
         const user_bot_data = await (0, database_1.get)((0, database_1.child)((0, database_1.ref)(db), 'users/' + userId));

@@ -4,21 +4,18 @@ import { Telegraf, session } from 'telegraf';
 import { DreamBotContext } from './types/types.js';
 import { message } from 'telegraf/filters';
 import { Update } from 'telegraf/types';
-// import LocalSession from 'telegraf-session-local';
 import * as commands from './commands/commands.js';
 import { setupLoggerMiddleware } from './middlewares/setup-logger.middleware.js';
 import { debugLoggerMiddleware } from './middlewares/debug-logger.middleware.js';
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
-// process.on("uncaughtException", (error) => logger.error(error));
 
 const app = express();
 export const bot = new Telegraf<DreamBotContext>(String(process.env.TELEGRAM_API_TOKEN), {
   telegram: { webhookReply: false },
 });
 
-// bot.use(new LocalSession({ database: '/tmp/db.json' }).middleware());
 bot.use(session({ defaultSession: () => ({ ...config.defaultSession }) }));
 bot.use(setupLoggerMiddleware());
 bot.use(debugLoggerMiddleware());

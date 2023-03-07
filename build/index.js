@@ -31,18 +31,15 @@ const config = __importStar(require("./config.js"));
 const express_1 = __importDefault(require("express"));
 const telegraf_1 = require("telegraf");
 const filters_1 = require("telegraf/filters");
-// import LocalSession from 'telegraf-session-local';
 const commands = __importStar(require("./commands/commands.js"));
 const setup_logger_middleware_js_1 = require("./middlewares/setup-logger.middleware.js");
 const debug_logger_middleware_js_1 = require("./middlewares/debug-logger.middleware.js");
 process.once('SIGINT', () => exports.bot.stop('SIGINT'));
 process.once('SIGTERM', () => exports.bot.stop('SIGTERM'));
-// process.on("uncaughtException", (error) => logger.error(error));
 const app = (0, express_1.default)();
 exports.bot = new telegraf_1.Telegraf(String(process.env.TELEGRAM_API_TOKEN), {
     telegram: { webhookReply: false },
 });
-// bot.use(new LocalSession({ database: '/tmp/db.json' }).middleware());
 exports.bot.use((0, telegraf_1.session)({ defaultSession: () => ({ ...config.defaultSession }) }));
 exports.bot.use((0, setup_logger_middleware_js_1.setupLoggerMiddleware)());
 exports.bot.use((0, debug_logger_middleware_js_1.debugLoggerMiddleware)());
